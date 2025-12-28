@@ -1,0 +1,12 @@
+#requirements file, nothing fancy here
+
+pandas==2.2.0
+numpy==1.26.0
+xgboost==2.0.3
+scikit-learn==1.4.0
+requests==2.31.0
+python-dotenv==1.0.0
+streamlit==1.31.0
+plotly==5.18.0
+shap==0.44.0
+riotwatcher==3.2.5

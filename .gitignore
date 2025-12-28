@@ -1,0 +1,11 @@
+# Environments
+venv/
+.env
+
+# Python cache
+__pycache__/
+*.py[cod]
+
+# Data and Models
+data/
+models/

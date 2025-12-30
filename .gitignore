@@ -1,11 +1,19 @@
-# Environments
+# environments
 venv/
 .env
 
-# Python cache
+# python cache
 __pycache__/
 *.py[cod]
 
-# Data and Models
+# Riot API rules - do not publish player data
+match_data.csv
+processed_players.txt
+players.py
+
+# Data folder - do not publish any contents
 data/
-models/
+
+# Not ready for publishing
+overlay.py
+live_predictor.py

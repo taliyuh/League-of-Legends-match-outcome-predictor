@@ -12,7 +12,7 @@ It is highly advised to run the scripts inside a virtual environment. Remember t
 - **`app.py`** - Complete pipeline of collecting the data, preprocessing it, and training the model.
 - **`champion_data.py`** - Maps champion IDs to their class.
 - **`data.py`** - Appends data to the dataset, based on players listed in `players.py`.
-- **`match_data.csv`** - Dataset of matches. Due to Riot API rules and regulations, it is not permitted to share the data online.
+- **`match_data.csv`** - Dataset of matches. Due to Riot API rules and regulations, it is not permitted to share the data online. Example data is available there.
 - **`model.py`** - Training and evaluating the model.
 - **`multi_models.py`** - Training and evaluating models for all rank/queue combinations.
 - **`multi_preprocessing.py`** - Preprocessing models for all rank/queue combinations.
@@ -31,4 +31,4 @@ It is highly advised to run the scripts inside a virtual environment. Remember t
 5. Analyse obtained models via `visualize_models.py`.
 
 ## Results
-Our database contains over 22000 unique matches from approximetely 400 players across different ranks. Visualisation of database and performances of the models is available in the `/charts` folder.
+Our database contains over 22000 unique matches from approximetely 400 players across different ranks. Visualisation of database and performances of the models is available in the `/charts` folder. Obtained models are available in the `/models` folder.

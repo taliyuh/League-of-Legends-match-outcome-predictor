@@ -29,3 +29,6 @@ It is highly advised to run the scripts inside a virtual environment. Remember t
 3. Run `multi_preprocessing.py`.
 4. Run `multi_models.py`.
 5. Analyse obtained models via `visualize_models.py`.
+
+## Results
+Our database contains over 22000 unique matches from approximetely 400 players across different ranks. Visualisation of database and performances of the models is available in the `/charts` folder.

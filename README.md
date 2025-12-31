@@ -1,3 +1,5 @@
+[Click here to view the Project Report (PDF)](./docs/lolai.pdf)
+
 # League of Legends Match Prediction
 
 ## Aim

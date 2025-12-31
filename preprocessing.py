@@ -5,6 +5,14 @@ import numpy as np
 import os
 from sklearn.model_selection import train_test_split
 
+# rank tier groupings
+RANK_TIERS = {
+    'low': ['BRONZE', 'SILVER'],
+    'mid': ['GOLD', 'PLATINUM'],
+    'high': ['EMERALD', 'DIAMOND'],
+    'elite': ['MASTER', 'GRANDMASTER', 'CHALLENGER']
+}
+
 class MatchPreprocessor:
     def __init__(self):
         self.feature_names = None
@@ -22,7 +30,7 @@ class MatchPreprocessor:
         
         return df
 
-    def engineer_features(self, df, include_champion_features=False, include_rank=False):
+    def engineer_features(self, df, include_champion_features=True, include_rank=True):
         # all features are differentials at 15 minutes
         df['gold_diff_15'] = df['blue_gold_15'] - df['red_gold_15']
         df['kill_diff_15'] = df['blue_kills_15'] - df['red_kills_15']
@@ -65,7 +73,7 @@ class MatchPreprocessor:
         
         return df
 
-    def create_feature_matrix(self, df, include_champion_features=False, include_rank=False):
+    def create_feature_matrix(self, df, include_champion_features=True, include_rank=True):
         # final features for model
         feature_cols = [
             'gold_diff_15', 'kill_diff_15', 'cs_diff_15',
@@ -103,12 +111,12 @@ class MatchPreprocessor:
 if __name__ == "__main__":
     import sys
     
-    target_rank = None
+    target_tier = None
     target_queue = None
     
     for arg in sys.argv[1:]:
-        if arg.startswith('rank:='):
-            target_rank = arg.split(':=')[1].upper()
+        if arg.startswith('tier:='):
+            target_tier = arg.split(':=')[1].lower()
         elif arg.startswith('queue:='):
             target_queue = int(arg.split(':=')[1])
     
@@ -118,10 +126,15 @@ if __name__ == "__main__":
     df = processor.load_data("match_data.csv")
     
     # filtering based on command line args
-    if target_rank:
+    if target_tier:
+        if target_tier not in RANK_TIERS:
+            print(f"\n[ERROR] unknown tier '{target_tier}'")
+            print(f"available tiers: {', '.join(RANK_TIERS.keys())}")
+            exit()
         initial_count = len(df)
-        df = df[df['player_rank_tier'] == target_rank]
-        print(f"only matches from {target_rank}: {len(df)} from {initial_count}")
+        tier_ranks = RANK_TIERS[target_tier]
+        df = df[df['player_rank_tier'].isin(tier_ranks)]
+        print(f"only matches from {target_tier.upper()} tier {tier_ranks}: {len(df)} from {initial_count}")
     
     if target_queue:
         initial_count = len(df)
@@ -136,21 +149,22 @@ if __name__ == "__main__":
     # engineering the features
     df_features = processor.engineer_features(
         df, 
-        include_champion_features=False,
-        include_rank=False
+        include_champion_features=True,
+        include_rank=True
     )
     X, y = processor.create_feature_matrix(
         df_features,
-        include_champion_features=False,
-        include_rank=False
+        include_champion_features=True,
+        include_rank=True
     )
     
     X_train, X_test, y_train, y_test = processor.split_and_save(X, y)
     
-    # determine target folder based on rank + queue type
+    # determine target folder based on tier + queue type
     config_name = ""
-    if target_rank:
-        config_name += target_rank.lower()
+    if target_tier:
+        config_name += target_tier.lower()
+    
     if target_queue:
         if config_name:
             config_name += "_"

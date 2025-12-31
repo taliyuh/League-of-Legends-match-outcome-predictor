@@ -8,6 +8,14 @@ import os
 from sklearn.metrics import accuracy_score, classification_report, roc_auc_score, confusion_matrix
 from sklearn.model_selection import GridSearchCV, RandomizedSearchCV
 
+# rank tier groupings
+RANK_TIERS = {
+    'low': ['BRONZE', 'SILVER'],
+    'mid': ['GOLD', 'PLATINUM'],
+    'high': ['EMERALD', 'DIAMOND'],
+    'elite': ['MASTER', 'GRANDMASTER', 'CHALLENGER']
+}
+
 class LoLPredictor:
     def __init__(self):
         self.model = None
@@ -21,7 +29,7 @@ class LoLPredictor:
         
         if auto_tune:
             print("\n" + "="*50)
-            print("hi taylor swift, your autotune is starting now")
+            print("your autotune is starting now")
             print("="*50)
             params = self._tune_hyperparameters(X_train, y_train)
         else:
@@ -86,11 +94,11 @@ class LoLPredictor:
         param_dist = {
             'max_depth': [2, 3, 4, 5],
             'learning_rate': [0.01, 0.03, 0.05, 0.1],
-            'subsample': [0.6, 0.7, 0.8, 0.9],
+            'subsample': [0.7, 0.8, 0.9],
             'colsample_bytree': [0.6, 0.7, 0.8, 0.9],
             'gamma': [0, 0.5, 1.0, 2.0],
             'reg_lambda': [0.5, 1.0, 2.0, 3.0],
-            'min_child_weight': [1, 3, 5]
+            'min_child_weight': [1, 2, 3, 5]
         }
         
         # base model (gradient boosting <3)
@@ -106,8 +114,8 @@ class LoLPredictor:
         random_search = RandomizedSearchCV(
             xgb_model,
             param_distributions=param_dist,
-            # 20 iterations, my laptop is not that great
-            n_iter=20,
+            # 30 iterations, my laptop is not that great
+            n_iter=30,
             scoring='roc_auc',
             cv=3,  # smart term: 3-fold cross-validation
             verbose=1,
@@ -163,21 +171,22 @@ class LoLPredictor:
 if __name__ == "__main__":
     import sys
     
-    # handle command line arguments for rank and q
-    target_rank = None
+    # handle command line arguments for tier and q
+    target_tier = None
     target_queue = None
     
     for arg in sys.argv[1:]:
-        if arg.startswith('rank:='):
-            target_rank = arg.split(':=')[1].upper()
+        if arg.startswith('tier:='):
+            target_tier = arg.split(':=')[1].lower()
         elif arg.startswith('queue:='):
             target_queue = int(arg.split(':=')[1])
 
     
     # find the folder for current config
     config_name = ""
-    if target_rank:
-        config_name += target_rank.lower()
+    if target_tier:
+        config_name += target_tier.lower()
+    
     if target_queue:
         if config_name:
             config_name += "_"
@@ -196,64 +205,17 @@ if __name__ == "__main__":
         y_test = pd.read_csv(f"{data_dir}/y_test.csv")['blue_team_win']
         
         print(f"\nloaded data from: {data_dir}/")
-    else:
-        print(f"error: data folder '{data_dir}' not found!")
-        print("run: python3 preprocessing.py rank:={rank} queue:={queue}")
-        print("or run: python3 multi_preprocessing.py to generate all datasets")
-        exit()
-        
-        # load original data to get rank and queue info
-        df_train_full = pd.read_csv("data/X_train.csv")
-        df_test_full = pd.read_csv("data/X_test.csv")
-
-        print("\n" + "="*60)
-        print("LOADING DATA")
-        print("="*60)
-        
-        # load original match data to get rank/q info
-        try:
-            df_original = pd.read_csv("match_data.csv")
-            
-            # filtering by rank
-            if target_rank:
-                initial_count = len(df_original)
-                df_original = df_original[df_original['player_rank_tier'] == target_rank]
-                print(f"showing matches from {target_rank}: {len(df_original)} from total of {initial_count}")
-            
-            # f by q
-            if target_queue:
-                initial_count = len(df_original)
-                df_original = df_original[df_original['queue_id'] == target_queue]
-                queue_name = "SoloQ" if target_queue == 420 else "Flex"
-                print(f"showing matches from {queue_name}: {len(df_original)} from total of {initial_count}")
-            
-            if len(df_original) < 50:
-                print(f"\n[ERROR] not enough data after filtering")
-                exit()
-            
-            # rerun preprocesssing
-            from preprocessing import MatchPreprocessor
-            processor = MatchPreprocessor()
-            df_features = processor.engineer_features(df_original, include_champion_features=False, include_rank=False)
-            X, y = processor.create_feature_matrix(df_features, include_champion_features=False, include_rank=False)
-            
-            from sklearn.model_selection import train_test_split
-            X_train, X_test, y_train, y_test = train_test_split(
-                X, y, test_size=0.2, random_state=42, stratify=y
-            )
-            
-        except FileNotFoundError:
-            print("couldnt load the csv")
-        exit()
     
     print(f"\n{'='*60}")
     print(f"TRAINING CONFIGURATION")
     print(f"{'='*60}")
-    print(f"rank filter: {target_rank if target_rank else 'ALL'}")
+    if target_tier:
+        print(f"tier filter: {target_tier.upper()} {RANK_TIERS[target_tier]}")
+    else:
+        print(f"tier filter: ALL")
     print(f"queue filter: {'SoloQ (420)' if target_queue == 420 else 'Flex (440)' if target_queue == 440 else 'ALL'}")
     print(f"training samples: {len(X_train)}")
     print(f"test samples: {len(X_test)}")
-    print(f"features: {X_train.columns.tolist()}")
     print(f"{'='*60}\n")
     
     predictor = LoLPredictor()
@@ -272,8 +234,9 @@ if __name__ == "__main__":
     
     # create model name and save 
     model_name = "lol_predictor"
-    if target_rank:
-        model_name += f"_{target_rank.lower()}"
+    if target_tier:
+        model_name += f"_{target_tier.lower()}"
+    
     if target_queue:
         queue_suffix = "soloq" if target_queue == 420 else "flex"
         model_name += f"_{queue_suffix}"

@@ -4,15 +4,23 @@ import subprocess
 import sys
 import os
 
-def run_preprocessing(rank=None, queue=None):
+# rank tier groupings
+RANK_TIERS = {
+    'low': ['BRONZE', 'SILVER'],
+    'mid': ['GOLD', 'PLATINUM'],
+    'high': ['EMERALD', 'DIAMOND'],
+    'elite': ['MASTER', 'GRANDMASTER', 'CHALLENGER']
+}
+
+def run_preprocessing(tier=None, queue=None):
 
     # generating args for configs
     cmd = [sys.executable, "preprocessing.py"]
     
     config = ""
-    if rank:
-        cmd.append(f"rank:={rank}")
-        config += f"{rank} "
+    if tier:
+        cmd.append(f"tier:={tier}")
+        config += f"{tier.upper()} "
     if queue:
         cmd.append(f"queue:={queue}")
         config += f"{'SoloQ' if queue == 420 else 'Flex'}"
@@ -31,28 +39,28 @@ def run_preprocessing(rank=None, queue=None):
         return False
 
 if __name__ == "__main__":
-    ranks = ['BRONZE', 'SILVER', 'GOLD', 'PLATINUM', 'EMERALD', 'DIAMOND', 'MASTER', 'GRANDMASTER', 'CHALLENGER']
+    tiers = list(RANK_TIERS.keys())
     
     print("="*60)
-    print("MULTI-PREPROCESSING")
+    print("MULTI-PREPROCESSING (TIERED)")
     print("="*60)
-    print("generating datasets ")
+    print("generating datasets for 4 skill tiers")
+    print(f"tiers: {', '.join([t.upper() for t in tiers])}")
     
     # 1. all data
-    run_preprocessing(rank=None, queue=None)
+    run_preprocessing(tier=None, queue=None)
     
     # 2. all ranks, soloq only
-    run_preprocessing(rank=None, queue=420)
+    run_preprocessing(tier=None, queue=420)
     
-    # 3. each rank, soloq only
-    for rank in ranks:
-        run_preprocessing(rank=rank, queue=420)
+    # 3. each tier, soloq only
+    for tier in tiers:
+        run_preprocessing(tier=tier, queue=420)
     
-    # 4. each rank, both queues
-    for rank in ranks:
-        run_preprocessing(rank=rank, queue=None)
+    # 4. each tier, both queues
+    for tier in tiers:
+        run_preprocessing(tier=tier, queue=None)
     
     print("\n" + "="*60)
     print("all datasets generated and saved!")
-
     print("="*60)

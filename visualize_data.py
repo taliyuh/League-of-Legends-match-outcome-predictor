@@ -162,7 +162,7 @@ def visualize_class_distribution(df):
     
     plt.figure(figsize=(12, 8))
     
-    # colour coding the pie chart, its rainbow #ally
+    # colour coding the pie chart
     colour_map = {
         'Fighter': '#E40303',
         'Marksman': '#FF8C00',
